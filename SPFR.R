@@ -13,6 +13,9 @@ library(installr) #download using Packages>Install Packages or Tools>Install Pac
 #ALSO Install this: https://cran.r-project.org/bin/windows/Rtools/
 #IMPORTANT: You should make sure that the box is checked to have the installer edit your PATH
 
+#11/11/2016
+VerNum <- c("RCode for SPFs ver 2.2.000")
+
 #Directory
 #Edit this in the event that your data is stored somewhere not relative to your home USER folder
 if (Sys.info()["nodename"] == "MERAK") {
