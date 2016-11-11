@@ -13,13 +13,8 @@ library(installr) #download using Packages>Install Packages or Tools>Install Pac
 #ALSO Install this: https://cran.r-project.org/bin/windows/Rtools/
 #IMPORTANT: You should make sure that the box is checked to have the installer edit your PATH
 
-#10/31/2016
-VerNum <- c("RCode for SPFs ver 2.1.150")
-
-#to do:
-
-
 #Directory
+#Edit this in the event that your data is stored somewhere not relative to your home USER folder
 if (Sys.info()["nodename"] == "MERAK") {
   MyUserFolder = "D:/SyncFolders"
 } else if(Sys.info()["nodename"] == "COE4249") {
@@ -29,19 +24,20 @@ if (Sys.info()["nodename"] == "MERAK") {
 } 
 
 #define data
-TotalColumn = "Total" #replace spaces with "." e.g. "Total.Crashes"
-KABCColumn = "" #leave blank to ignore
-KABColumn = "KAB" #leave blank to ignore
-KAColumn = "" #leave blank to ignore
-KColumn = "" #leave blank to ignore
-AADTColumn = "LASTCNT"
-LengthColumn = "Length"
-ClassColumn = "Class" #leave blank to ignore
-ClassStart = 1 #Enter a positive integer. This will split the data into groups based on the ClassField defined above
-ClassEnd = 7 #Enter a positive integer. This will split the data into groups based on the ClassField defined above
+TotalColumn = "Total" #The title of the column containing All Crashes. replace spaces with "." e.g. "Total.Crashes"
+KABCColumn = "" #The title of the column containing KABC Crashes. leave blank to ignore
+KABColumn = "KAB" #The title of the column containing KAB Crashes. leave blank to ignore
+KAColumn = "" #The title of the column containing KA Crashes. leave blank to ignore
+KColumn = "" #The title of the column containing K Crashes. leave blank to ignore
+AADTColumn = "LASTCNT" #The title of the column containing AADT. 
+LengthColumn = "Length" #The title of the column containing Length. 
+ClassColumn = "Class" #The title of the column containing a class category. leave blank to ignore
+ClassStart = 1 #Enter a positive integer. This will split the data into groups based on the Class defined above
+ClassEnd = 7 #Enter a positive integer. This will split the data into groups based on the Class defined above
+#Path to the input file as a CSV. Must contain headers as defined above.
 CSVpath = paste0(MyUserFolder,"/Dropbox (Trans. Center)/~Annual Projects/HSIP/2016/Cable/Crash Data/OverlayResultsWithClassesClean.csv")
 OutputProject_Base = "Cable class Test" #Project name - created in Documents/R_SPFs
-myFilter_Base = "data[[AADTColumn]] > 0  & data[[LengthColumn]] > 0"
+myFilter_Base = "data[[AADTColumn]] > 0  & data[[LengthColumn]] > 0" # A base filter. Usually best to avoid Length or AADT of 0 or below. 
 InputData_Base = "Median crossover 2011-2015" # be sure to uniquely describe the data so it can be traced back to the source
 ######################################################################
 ######################################################################
@@ -54,9 +50,9 @@ InputData_Base = "Median crossover 2011-2015" # be sure to uniquely describe the
 #myFilter = "data[[AADTColumn]] > 0 & data[[LengthColumn]]"
 #myFilter = "data[[AADTColumn]] < 500 & data$SHLDWID == 2 & data$LANEWID == 9 & (data$CURVECLS == 'A' | data$CURVECLS == 'B') & data$MEDTYPE == 8 & (data$GRADECLS == 'A' | data$GRADECLS == '')"
 
+#flag to test if data is bound
 databind = FALSE
 
-#To read the data into R
 #read data
 result <- tryCatch({
   data=read.csv(CSVpath,header=T)
@@ -91,16 +87,14 @@ result <- tryCatch({
 })
 }
 
-
+#Main SPF function
 RunSPF <- function() {
-  #filter out zero length and zero AADT
+  #filter based on users' base filter
   data_temp <- data[ which(eval(parse(text = myFilter))),]
   
   #sort by AADT
   data2 <- data_temp[ order(data_temp[[AADTColumn]]),]
-  
-  #length(data2$myID)
-  
+   
   #Point to variables
   crash=data2[[CrashColumn]]
   lnADT=log(data2[[AADTColumn]])
@@ -108,13 +102,16 @@ RunSPF <- function() {
   #Calculate length if it doesn't exists - this will make zero length filter difficult
   #lnL=log(EMP-BMP)
   
-  init.theta = 0.1
+  init.theta = 0.1 #it may be neccessary to alter this to get a model fit
+  
+#################################################################
   SPF=glm.nb(crash~lnADT+offset(lnL))
-
+#################################################################
+  
   #add results from GLM
   dataout <- cbind(data2,Predicted=SPF$fitted.values,Residuals=resid(SPF,type="resp"),CumulRes=cumsum(resid(SPF,type="resp")))
   
-  #calculate limits
+  #calculate data for CURE plot
   datalimits <- data.frame(dataout$Residuals)
   datalimits["AADT"] <- NA
   datalimits$AADT <- data2[[AADTColumn]]
@@ -135,6 +132,7 @@ RunSPF <- function() {
   datalimits["Per_CURE"] <- NA
   datalimits$Per_CURE <- ifelse(datalimits$CumulRes<=datalimits$UpperLimit,ifelse(datalimits$CumulRes>=datalimits$LowerLimit,1,0),0)
   
+  #create CURE plot
   CUREPlot <- ggplot(datalimits, aes(datalimits$AADT, y = value, color = variable)) + 
     geom_point(aes(y = UpperLimit, col = "Upper")) + 
     geom_point(aes(y = LowerLimit, col = "Lower")) + 
@@ -150,11 +148,7 @@ RunSPF <- function() {
     ggtitle("SPF Scatter Plot") +
     labs(x="AADT",y="Crashes per mile")
   ggsave(file=paste0(OutPath,OutputProject,"_Scatter.png"))
-  
-  #png(paste0(OutPath,OutputProject,"_Scatter.png"))
-  #plot(dataout[[AADTColumn]], dataout[[CrashColumn]])
-  #dev.off()
-  
+   
   #Metrics/Stats
   Sample = nrow(dataout)
   Mileage = sum(dataout[[LengthColumn]])
@@ -171,7 +165,9 @@ RunSPF <- function() {
   attr(datametrics, "row.names") <- c("Sample","Length","Crashes","R2","CDP","MACD","MAD","Theta","Alpha","Beta","StdErr","AIC", "Filter","Input Data","")
   datametrics$Values = as.numeric(as.character(datametrics$Values))
   
-  #PCR
+  #PCR (potential for crash reduction)
+  # NOTE: the weight equation is based on a 5-year period. That is, the number of crashes in the input file is for
+  #a 5-year period therefore year is not in the equation!
   dataout["Weight"] <- NA
   dataout$Weight <- 1/(1+dataout$Predicted/dataout[[LengthColumn]]/SPF$theta)
   dataout["EB_Estimate"] <- NA
@@ -179,6 +175,7 @@ RunSPF <- function() {
   dataout["PCR"] <- NA
   dataout$PCR <- dataout$EB_Estimate - dataout$Predicted
   
+  #save results to Excel
   wb <- createWorkbook()
   options("openxlsx.borderStyle" = "thin")
   options("openxlsx.borderColour" = "#4F81BD")
