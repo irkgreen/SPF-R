@@ -13,8 +13,8 @@ library(installr) #download using Packages>Install Packages or Tools>Install Pac
 #ALSO Install this: https://cran.r-project.org/bin/windows/Rtools/
 #IMPORTANT: You should make sure that the box is checked to have the installer edit your PATH
 
-#11/11/2016
-VerNum <- c("RCode for SPFs ver 2.2.000")
+#11/24/2016
+VerNum <- c("RCode for SPFs ver 2.2.001")
 
 #Directory
 #Edit this in the event that your data is stored somewhere not relative to your home USER folder
@@ -42,6 +42,7 @@ CSVpath = paste0(MyUserFolder,"/Dropbox (Trans. Center)/~Annual Projects/HSIP/20
 OutputProject_Base = "Cable class Test" #Project name - created in Documents/R_SPFs
 myFilter_Base = "data[[AADTColumn]] > 0  & data[[LengthColumn]] > 0" # A base filter. Usually best to avoid Length or AADT of 0 or below. 
 InputData_Base = "Median crossover 2011-2015" # be sure to uniquely describe the data so it can be traced back to the source
+initTheta = 1.0 #starting point for theta. adjust as needed
 ######################################################################
 ######################################################################
 ##### Be sure to edit the model form in the glm.nb  if different #####
@@ -105,7 +106,7 @@ RunSPF <- function() {
   #Calculate length if it doesn't exists - this will make zero length filter difficult
   #lnL=log(EMP-BMP)
   
-  init.theta = 0.1 #it may be neccessary to alter this to get a model fit
+  init.theta = initTheta
   
 #################################################################
   SPF=glm.nb(crash~lnADT+offset(lnL))
