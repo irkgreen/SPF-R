@@ -14,7 +14,7 @@ library(installr) #download using Packages>Install Packages or Tools>Install Pac
 #IMPORTANT: You should make sure that the box is checked to have the installer edit your PATH
 
 #11/24/2016
-VerNum <- c("RCode for SPFs ver 2.2.001")
+VerNum <- c("RCode for SPFs ver 2.2.002")
 
 #Directory
 #Edit this in the event that your data is stored somewhere not relative to your home USER folder
@@ -147,7 +147,7 @@ RunSPF <- function() {
   
   #Scatter Plot with SPF
   ScatterPlot <- ggplot(dataout, aes(dataout[[AADTColumn]], y = value, color = variable)) + 
-    geom_point(aes(y = dataout[[CrashColumn]], col = "Obs Crashes")) + 
+    geom_point(aes(y = dataout[[CrashColumn]] / dataout[[LengthColumn]], col = "Obs Crashes")) + 
     geom_point(aes(y = dataout$Predicted / dataout[[LengthColumn]], col = "SPF")) + 
     ggtitle("SPF Scatter Plot") +
     labs(x="AADT",y="Crashes per mile")
