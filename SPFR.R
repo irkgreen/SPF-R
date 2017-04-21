@@ -13,8 +13,8 @@ library(installr) #download using Packages>Install Packages or Tools>Install Pac
 #ALSO Install this: https://cran.r-project.org/bin/windows/Rtools/
 #IMPORTANT: You should make sure that the box is checked to have the installer edit your PATH
 
-#11/24/2016
-VerNum <- c("RCode for SPFs ver 2.2.002")
+#4/21/2017
+VerNum <- c("RCode for SPFs ver 2.2.003")
 
 #Directory
 #Edit this in the event that your data is stored somewhere not relative to your home USER folder
