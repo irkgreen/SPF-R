@@ -134,7 +134,7 @@ RunSPF <- function() {
   datalimits["LowerLimit"] <- NA
   datalimits$LowerLimit <- datalimits$StdDev * (-1.96)
   datalimits["Per_CURE"] <- NA
-  datalimits$Per_CURE <- ifelse(datalimits$CumulRes<=datalimits$UpperLimit,ifelse(datalimits$CumulRes>=datalimits$LowerLimit,1,0),0)
+  datalimits$Per_CURE <- ifelse(datalimits$CumulRes>datalimits$UpperLimit,1,ifelse(datalimits$CumulRes<datalimits$LowerLimit,1,0))
   
   #create CURE plot
   CUREPlot <- ggplot(datalimits, aes(datalimits$AADT, y = value, color = variable)) + 
@@ -161,7 +161,7 @@ RunSPF <- function() {
   tmpTerm = sum((dataout[[CrashColumn]]-ObsAvg)^2)
   tmpTerm2 = sum((dataout[[CrashColumn]]-dataout$Predicted)^2)
   RSquared = (tmpTerm-tmpTerm2)/(tmpTerm-sum(dataout$Predicted))
-  CDP = 100 - sum(datalimits$Per_CURE)/length(datalimits$Per_CURE)*100
+  CDP = sum(datalimits$Per_CURE)/length(datalimits$Per_CURE)*100
   MACD = max(abs(datalimits$CumulRes))  
   MAD = mean(abs(dataout$Residuals))
   datametrics <- data.frame(Values = c(Sample,Mileage,Crashes,RSquared,CDP,MACD,MAD,SPF$theta,coef(summary(SPF))["(Intercept)","Estimate"],coef(summary(SPF))["lnADT","Estimate"], SPF$SE.theta, SPF$aic, "", "", ""))
