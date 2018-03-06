@@ -180,7 +180,7 @@ RunSPF <- function() {
   MACD = max(abs(datalimits$CumulRes))  
   MAD = mean(abs(dataout$Residuals))
   datametrics <- data.frame(Values = c(Sample,Mileage,Crashes,RSquared,CDP,MACD,MAD,SPF$theta,coef(summary(SPF))["(Intercept)","Estimate"],coef(summary(SPF))["lnADT","Estimate"], SPF$SE.theta, SPF$aic, "", "", ""))
-  datametrics$Notes <- c("100-200 intersections*","100-200 miles*","300 crashes per year*","Higher values preferred","Less than 5%","Smaller values preferred","Smaller values preferred","Higher values preferred","(Intercept)","(lnAADT)","", "", myFilter, InputData,"*As recommended by FHWA-SA-14-004")
+  datametrics$Notes <- c("100-200 intersections*","100-200 miles*","300 crashes per year*","Higher values preferred","Less than 5%","Smaller values preferred","Smaller values preferred","Higher values preferred",paste0("(Intercept) zvalue= ",coef(summary(SPF))["(Intercept)","Pr(>|z|)"]) ,paste0("lnADT zvalue= ",coef(summary(SPF))["lnADT","Pr(>|z|)"]),"", "", myFilter, InputData,"*As recommended by FHWA-SA-14-004") 
   attr(datametrics, "row.names") <- c("Sample","Length","Crashes","R2","CDP","MACD","MAD","Theta","Alpha","Beta","StdErr","AIC", "Filter","Input Data","")
   datametrics$Values = as.numeric(as.character(datametrics$Values))
   
