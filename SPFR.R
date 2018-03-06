@@ -207,7 +207,7 @@ RunSPF <- function() {
   dataout["PCR"] <- NA
   dataout$PCR <- dataout$EB_Estimate - dataout$Predicted
   dataout["StdError"] <- NA
-  dataout$StdError <- sqrt(1-dataout$Weight)*dataout$EB_Estimate))
+  dataout$StdError <- sqrt((1-dataout$Weight)*dataout$EB_Estimate)
       
   #save results to Excel
   wb <- createWorkbook()
@@ -218,6 +218,7 @@ RunSPF <- function() {
   writeData(wb, "Metrics", datametrics, startCol = 2, startRow = 3, rowNames = TRUE)
   writeData(wb, "Metrics", VerNum, startCol = 1, startRow = 1)
   writeData(wb, "Metrics", CSVpath, startCol = 1, startRow = 2)
+  writeData(wb, "Metrics", myStats, startCol = 2, startRow = 20)
   writeData(wb, "Data", dataout)
   saveWorkbook(wb, paste0(OutPath,OutputProject,".xlsx"), overwrite = TRUE)
 }
