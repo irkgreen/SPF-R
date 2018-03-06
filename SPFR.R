@@ -152,8 +152,23 @@ RunSPF <- function() {
     ggtitle("SPF Scatter Plot") +
     labs(x="AADT",y="Crashes per mile")
   ggsave(file=paste0(OutPath,OutputProject,"_Scatter.png"))
+  
+  #box plots
+  jpeg(file=paste0(OutPath,OutputProject,"_CrashBox.png"))
+    boxplot(dataout[[CrashColumn]], main="Crash Box Plot", ylab="Crashes")
+  dev.off()
+  jpeg(file=paste0(OutPath,OutputProject,"_CrashPerMileBox.png"))
+    boxplot(dataout[[CrashColumn]]/dataout[[LengthColumn]], main="Crashes Per Mile Box Plot", ylab="Crashes Per Mile")
+  dev.off()
+  jpeg(file=paste0(OutPath,OutputProject,"_LengthBox.png"))
+    boxplot(dataout[[LengthColumn]], main="Length Box Plot", ylab="Length")
+  dev.off()
+  jpeg(file=paste0(OutPath,OutputProject,"_AADTBox.png"))
+    boxplot(dataout[[AADTColumn]], main="AADT Box Plot", ylab="AADT")
+  dev.off()
+  
    
-  #Metrics/Stats
+  #Metrics
   Sample = nrow(dataout)
   Mileage = sum(dataout[[LengthColumn]])
   Crashes = sum(dataout[[CrashColumn]])
@@ -161,13 +176,26 @@ RunSPF <- function() {
   tmpTerm = sum((dataout[[CrashColumn]]-ObsAvg)^2)
   tmpTerm2 = sum((dataout[[CrashColumn]]-dataout$Predicted)^2)
   RSquared = (tmpTerm-tmpTerm2)/(tmpTerm-sum(dataout$Predicted))
-  CDP = sum(datalimits$Per_CURE)/length(datalimits$Per_CURE)*100
+  CDP = 100 - sum(datalimits$Per_CURE)/length(datalimits$Per_CURE)*100
   MACD = max(abs(datalimits$CumulRes))  
   MAD = mean(abs(dataout$Residuals))
   datametrics <- data.frame(Values = c(Sample,Mileage,Crashes,RSquared,CDP,MACD,MAD,SPF$theta,coef(summary(SPF))["(Intercept)","Estimate"],coef(summary(SPF))["lnADT","Estimate"], SPF$SE.theta, SPF$aic, "", "", ""))
-  datametrics$Notes <- c("100-200 intersections*","100-200 miles*","300 crashes per year*","Higher values preferred","Less than 5%","Smaller values preferred","Smaller values preferred","Higher values preferred","(Intercept)","(lnAADT)", "", "", myFilter, InputData,"*As recommended by FHWA-SA-14-004")
+  datametrics$Notes <- c("100-200 intersections*","100-200 miles*","300 crashes per year*","Higher values preferred","Less than 5%","Smaller values preferred","Smaller values preferred","Higher values preferred","(Intercept)","(lnAADT)","", "", myFilter, InputData,"*As recommended by FHWA-SA-14-004")
   attr(datametrics, "row.names") <- c("Sample","Length","Crashes","R2","CDP","MACD","MAD","Theta","Alpha","Beta","StdErr","AIC", "Filter","Input Data","")
   datametrics$Values = as.numeric(as.character(datametrics$Values))
+  
+  #Stats
+  statTitles <- data.frame(Stat=c("Mean","StdDev","Min","Q1","Median","Q3","Max"))
+  CrashQuartiles = quantile(dataout[[CrashColumn]])
+  statCrash <- data.frame(Crash=c(mean(dataout[[CrashColumn]]),sd(dataout[[CrashColumn]]),min(dataout[[CrashColumn]]),CrashQuartiles[2],CrashQuartiles[3],CrashQuartiles[4],max(dataout[[CrashColumn]])))
+  CrashPerMileQuartiles = quantile(dataout[[CrashColumn]]/dataout[[LengthColumn]])
+  statCrashPerMile <- data.frame(CrashesPerMile=c(mean(dataout[[CrashColumn]]/dataout[[LengthColumn]]),sd(dataout[[CrashColumn]]/dataout[[LengthColumn]]),min(dataout[[CrashColumn]]/dataout[[LengthColumn]]),CrashPerMileQuartiles[2],CrashPerMileQuartiles[3],CrashPerMileQuartiles[4],max(dataout[[CrashColumn]]/dataout[[LengthColumn]])))
+  AADTQuartiles = quantile(dataout[[AADTColumn]])
+  statAADT <- data.frame(AADT=c(mean(dataout[[AADTColumn]]),sd(dataout[[AADTColumn]]),min(dataout[[AADTColumn]]),AADTQuartiles[2],AADTQuartiles[3],AADTQuartiles[4],max(dataout[[AADTColumn]])))
+  LengthQuartiles = quantile(dataout[[LengthColumn]])
+  statLength <- data.frame(Length=c(mean(dataout[[LengthColumn]]),sd(dataout[[LengthColumn]]),min(dataout[[LengthColumn]]),LengthQuartiles[2],LengthQuartiles[3],LengthQuartiles[4],max(dataout[[LengthColumn]])))
+  
+  myStats = data.frame(statTitles,statCrash,statCrashPerMile,statAADT,statLength)
   
   #PCR (potential for crash reduction)
   # NOTE: the weight equation is based on a 5-year period. That is, the number of crashes in the input file is for
@@ -178,7 +206,9 @@ RunSPF <- function() {
   dataout$EB_Estimate <- dataout[[CrashColumn]]*(1-dataout$Weight) + dataout$Predicted*(dataout$Weight)
   dataout["PCR"] <- NA
   dataout$PCR <- dataout$EB_Estimate - dataout$Predicted
-  
+  dataout["StdError"] <- NA
+  dataout$StdError <- sqrt(1-dataout$Weight)*dataout$EB_Estimate))
+      
   #save results to Excel
   wb <- createWorkbook()
   options("openxlsx.borderStyle" = "thin")
