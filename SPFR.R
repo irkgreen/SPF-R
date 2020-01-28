@@ -208,7 +208,24 @@ RunSPF <- function() {
   dataout$PCR <- dataout$EB_Estimate - dataout$Predicted
   dataout["StdError"] <- NA
   dataout$StdError <- sqrt((1-dataout$Weight)*dataout$EB_Estimate)
-      
+  
+    #calculate data for LOSS Plot
+  dataout=cbind(dataout,Expected=dataout$Predicted/dataout$Length,LOSS_Crashes=dataout$EB_Estimate)
+  dataout=cbind(dataout,beta=dataout$Expected/SPF$theta) # Fixed Error
+  dataout=cbind(dataout,lowloss=qgamma(0.05,SPF$theta,scale=dataout$beta),uploss=qgamma(0.95,SPF$theta,scale=dataout$beta))
+  dataout=cbind(dataout,LOSS_score=ifelse(dataout$LOSS_Crashes>dataout$uploss,4,ifelse(dataout$LOSS_Crashes>dataout$Expected,3,ifelse(dataout$LOSS_Crashes>dataout$lowloss,2,1)))) # fixed error
+  
+  #create LOSS plot
+  LOSSPlot <- ggplot(dataout, aes(dataout$AADT, y = value, color = variable)) + 
+    geom_point(aes(y = uploss, col = "Upper LOSS")) + 
+    geom_point(aes(y = lowloss, col = "Lower LOSS")) + 
+    geom_point(aes(y = Expected, col = "Expected")) + 
+    geom_point(aes(y = LOSS_Crashes, col = "Crashes (EB Corrected)")) + 
+    ggtitle("LOSS Plot") +
+    labs(x="AADT",y="Crashes per Mile")
+  ggsave(file=paste0(OutPath,OutputProject,"_LOSS.png"))
+
+  
   #save results to Excel
   wb <- createWorkbook()
   options("openxlsx.borderStyle" = "thin")
