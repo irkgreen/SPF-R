@@ -1,6 +1,8 @@
 options(echo=FALSE)
 #RCode for SPFs
 
+Sys.setenv("R_ZIPCMD" = "C:/Rtools/bin/zip.exe")#This sets the path of the zip function for the output excel spreadsheets -Jacob
+
 #remove working envr
 #rm(list = ls())
 cat(rep("\n",64))
