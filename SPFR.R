@@ -13,8 +13,8 @@ library(installr) #download using Packages>Install Packages or Tools>Install Pac
 #ALSO Install this: https://cran.r-project.org/bin/windows/Rtools/
 #IMPORTANT: You should make sure that the box is checked to have the installer edit your PATH
 
-#3/25/2020
-VerNum <- c("RCode for SPFs ver 2.2.015")
+#3/30/2021
+VerNum <- c("RCode for SPFs ver 2.3.000")
 
 #################
 # F O L D E R S #
@@ -241,17 +241,17 @@ RunSPF <- function() {
   
   myStats = data.frame(statTitles,statCrash,statCrashPerMile,statAADT,statLength)
   
-  #PCR (potential for crash reduction)
+  #EEC (potential for crash reduction)
   # NOTE: the weight equation is based on a 5-year period. That is, the number of crashes in the input file is for
   #a 5-year period therefore year is not in the equation!
   dataout["Weight"] <- NA
   dataout$Weight <- 1/(1+dataout$Predicted/dataout[[LengthColumn]]/SPF$theta)
   dataout["EB_Estimate"] <- NA
   dataout$EB_Estimate <- dataout[[CrashColumn]]*(1-dataout$Weight) + dataout$Predicted*(dataout$Weight)
-  dataout["PCR"] <- NA
-  dataout$PCR <- dataout$EB_Estimate - dataout$Predicted
+  dataout["EEC"] <- NA
+  dataout$EEC <- dataout$EB_Estimate - dataout$Predicted
   dataout["SDev"] <- NA
-  dataout$SDev <- sqrt((1-dataout$Weight)*dataout$Predicted) 
+  dataout$SDev <- sqrt((1-dataout$Weight)*dataout$EB_Estimate) #fixed error
   
     #calculate data for LOSS Plot
   dataout<-cbind(dataout,Expected=dataout$Predicted/dataout[[LengthColumn]],LOSS_Crashes=dataout$EB_Estimate)
