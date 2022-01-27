@@ -254,7 +254,7 @@ RunSPF <- function() {
   dataout$SDev <- sqrt((1-dataout$Weight)*dataout$EB_Estimate) #fixed error
   
     #calculate data for LOSS Plot
-  dataout<-cbind(dataout,Expected=dataout$Predicted/dataout[[LengthColumn]],LOSS_Crashes=dataout$EB_Estimate)
+  dataout<-cbind(dataout,Expected=dataout$Predicted/dataout[[LengthColumn]],LOSS_Crashes=dataout$EB_Estimate/dataout[[LengthColumn]])
   dataout=cbind(dataout,beta=dataout$Expected/SPF$theta) # Fixed Error
   dataout=cbind(dataout,lowloss=qgamma(0.05,SPF$theta,scale=dataout$beta),uploss=qgamma(0.95,SPF$theta,scale=dataout$beta))
   dataout=cbind(dataout,LOSS_score=ifelse(dataout$LOSS_Crashes>dataout$uploss,4,ifelse(dataout$LOSS_Crashes>dataout$Expected,3,ifelse(dataout$LOSS_Crashes>dataout$lowloss,2,1)))) # fixed error
